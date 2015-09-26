@@ -2,7 +2,9 @@
 title: "Coursera Practical Machine Learning - Prediction Assignment Writeup"
 author: "Maheshwari"
 date: "Friday, September 25, 2015"
-output: html_document
+output:
+  html_document:
+    keep_md: yes
 ---
 
 #Summary
