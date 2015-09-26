@@ -6,9 +6,15 @@ output: html_document
 ---
 
 #Summary
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks.
 
+One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, we will use data recorded from accelerometers on the belt, forearm, arm, and dumbbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
 
-##Preparing
+More information is available from the website http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+The goal of this project is to predict the manner in which the volunteers did the exercise. The outcome is measured against 60 observations and classifed as "A,B,C,D,E" catogerise and it is stored in the classe variable in the data set.
+
+#Preparing the data
 Loading all the required packages
 ```{r echo=FALSE}
     library(caret)
@@ -18,17 +24,15 @@ Loading all the required packages
     library(randomForest)
 ```
 
-Loading the data
-
+##Loading the data
 ```{r, echo=TRUE}
     wholedata <- read.csv("pml-training.csv", na.strings = c("NA", "#DIV/0!", ""))
     testingSet<-read.csv("pml-testing.csv",na.strings=c("NA","#DIV/0!"))
 ```
 
-Cleaning the data 
+##Cleaning the data 
 Removed the rows of data which has "NA" and also the variables which are not required
 or useful for the predictions from both the training set and the testing set.
-
 ```{r, echo=TRUE}
     NA_Count = sapply(1:dim(wholedata)[2],function(x)sum(is.na(wholedata[,x])))
     NA_list = which(NA_Count>0)
@@ -44,17 +48,17 @@ or useful for the predictions from both the training set and the testing set.
     testingSet = testingSet[,-c(1:7)]
     dim(wholedata)
     dim(testingSet)
-    #inTrain = createDataPartition(y=wholedata$classe,p=0.6,list=FALSE)
-inTrain=createDataPartition(y=wholedata$classe, p=0.6, list=FALSE)
 ```
 
-Creating the traning and testing data partitions
+From the data set creating the traning and testing data partitions. The test set of 20 observations provided will be used to validate the model at the end.
 
 ```{r, echo=TRUE}
-
+    inTrain=createDataPartition(y=wholedata$classe, p=0.6, list=FALSE)
     training <-wholedata[inTrain,]
     testing <- wholedata[-inTrain,]
 ```
+#Modelling
+We now create our model using the functions provided in caret package in R.
 ## Tree Method
 Using the Tree method to do the prediction of 'classe'.
 
@@ -74,11 +78,12 @@ Using Random forest method to do the prediction.
 ```{r, echo=TRUE}
     modfit2=randomForest(classe~., data=training, method='class')
     pred2 = predict(modfit2,testing,type='class') 
-    z2=confusionMatrix(pred2,testing$classe)
-    z2$table
+    qplot(roll_belt, magnet_dumbbell_y, colour=classe, data=training)  
 ```
 Random forest prediction model provides 99% accurancy hence this model has been choosen to do predict the testing data set.
 ```{r, echo=TRUE}
+    z2=confusionMatrix(pred2,testing$classe)
+    z2$table
     z2$overall[1]
 ```
 
