@@ -1,0 +1,96 @@
+---
+title: "Coursera Practical Machine Learning - Prediction Assignment Writeup"
+author: "Maheshwari"
+date: "Friday, September 25, 2015"
+output: html_document
+---
+
+#Summary
+
+
+##Preparing
+Loading all the required packages
+```{r echo=FALSE}
+    library(caret)
+    library(rattle)
+    library(rpart)
+    library(rpart.plot)
+    library(randomForest)
+```
+
+Loading the data
+
+```{r, echo=TRUE}
+    wholedata <- read.csv("pml-training.csv", na.strings = c("NA", "#DIV/0!", ""))
+    testingSet<-read.csv("pml-testing.csv",na.strings=c("NA","#DIV/0!"))
+```
+
+Cleaning the data 
+Removed the rows of data which has "NA" and also the variables which are not required
+or useful for the predictions from both the training set and the testing set.
+
+```{r, echo=TRUE}
+    NA_Count = sapply(1:dim(wholedata)[2],function(x)sum(is.na(wholedata[,x])))
+    NA_list = which(NA_Count>0)
+    
+    wholedata = wholedata[,-NA_list]
+    wholedata = wholedata[,-c(1:7)]
+    wholedata$classe = factor(wholedata$classe)
+
+
+    NA_Count1 = sapply(1:dim(testingSet)[2],function(x)sum(is.na(testingSet[,x])))
+    NA_list1 = which(NA_Count1>0)
+    testingSet = testingSet[,-NA_list]
+    testingSet = testingSet[,-c(1:7)]
+    dim(wholedata)
+    dim(testingSet)
+    #inTrain = createDataPartition(y=wholedata$classe,p=0.6,list=FALSE)
+inTrain=createDataPartition(y=wholedata$classe, p=0.6, list=FALSE)
+```
+
+Creating the traning and testing data partitions
+
+```{r, echo=TRUE}
+
+    training <-wholedata[inTrain,]
+    testing <- wholedata[-inTrain,]
+```
+## Tree Method
+Using the Tree method to do the prediction of 'classe'.
+
+```{r, echo=TRUE}
+
+    modfit1 <- train(classe ~ .,method='rpart',data=training)
+    fancyRpartPlot(modfit1$finalModel) 
+    pred=predict(modfit1,newdata=testing)
+    z=confusionMatrix(pred,testing$classe)
+    z$table
+    z$overall[1]
+```
+From the confusion matrix it is clear the accuracy of "0.49" for this model fit clearly shows "no purity" hence this model fit is rejected.
+
+## Random Forest Method
+Using Random forest method to do the prediction.
+```{r, echo=TRUE}
+    modfit2=randomForest(classe~., data=training, method='class')
+    pred2 = predict(modfit2,testing,type='class') 
+    z2=confusionMatrix(pred2,testing$classe)
+    z2$table
+```
+Random forest prediction model provides 99% accurancy hence this model has been choosen to do predict the testing data set.
+```{r, echo=TRUE}
+    z2$overall[1]
+```
+
+#Conclusion
+From the above results the random forest method provides the best fit model and it is been considered for testing the test data set to submit results.
+
+```{r, echo=TRUE}
+    pred3 =  predict(modfit2,testingSet,type='class')
+    nofiles = length(pred3)
+    for (i in 1:nofiles){
+        filename =  paste0("problem_id",i,".txt")
+        write.table(pred3[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+    pred3
+```
